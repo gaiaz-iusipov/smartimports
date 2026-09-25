@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"golang.org/x/tools/imports"
 )
 
@@ -82,17 +81,17 @@ func processDir(path string, opts *imports.Options, excludedPaths []string) erro
 func processFile(filename string, info fs.FileInfo, opts *imports.Options) error {
 	rawData, err := os.ReadFile(filename)
 	if err != nil {
-		return errors.Wrap(err, "os.ReadFile")
+		return fmt.Errorf("read file: %w", err)
 	}
 
 	res, err := processData(rawData, opts)
 	if err != nil {
-		return errors.Wrap(err, "processData")
+		return fmt.Errorf("process data: %w", err)
 	}
 
 	err = os.WriteFile(filename, res, info.Mode())
 	if err != nil {
-		return errors.Wrap(err, "os.WriteFile")
+		return fmt.Errorf("write file: %w", err)
 	}
 	return nil
 }
@@ -100,14 +99,14 @@ func processFile(filename string, info fs.FileInfo, opts *imports.Options) error
 func processData(src []byte, opts *imports.Options) ([]byte, error) {
 	res, err := imports.Process("", src, opts)
 	if err != nil {
-		return nil, errors.Wrap(err, "imports.Process 1")
+		return nil, fmt.Errorf("process imports 1: %w", err)
 	}
 
 	res = removeImportEmptyLines(res)
 
 	res, err = imports.Process("", res, opts)
 	if err != nil {
-		return nil, errors.Wrap(err, "imports.Process 2")
+		return nil, fmt.Errorf("process imports 2: %w", err)
 	}
 
 	return res, nil
