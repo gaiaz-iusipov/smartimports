@@ -113,18 +113,12 @@ func processData(src []byte, opts *imports.Options) ([]byte, error) {
 }
 
 func removeImportEmptyLines(src []byte) []byte {
-	r := bytes.NewBuffer(src)
 	w := bytes.NewBuffer(make([]byte, 0, len(src)))
 
 	importsStarted := false
 	importsEnded := false
 
-	for {
-		line, err := r.ReadString('\n')
-		if err != nil {
-			break
-		}
-
+	for line := range strings.Lines(string(src)) {
 		if importsStarted {
 			if !importsEnded {
 				if strings.TrimSpace(line) == "" {
