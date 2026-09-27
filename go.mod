@@ -1,4 +1,4 @@
-module github.com/pav5000/smartimports
+module github.com/gaiaz-iusipov/smartimports
 
 go 1.27
 
