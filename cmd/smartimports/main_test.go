@@ -1,84 +1,54 @@
 package main
 
-import (
-	"testing"
+import "testing"
 
-	"github.com/stretchr/testify/assert"
-)
-
-func Test_processData_SeveralImportBlocksToOne(t *testing.T) {
-	src := `package main
+func Test_processData(t *testing.T) {
+	tests := [...]struct {
+		name, src, want string
+	}{
+		{
+			name: "SeveralImportBlocksToOne",
+			src: `package main
 
 import "context"
 import "os"
-
-func main() {
-
-}
-`
-	dst := `package main
+`,
+			want: `package main
 
 import (
 	"context"
 	"os"
 )
-
-func main() {
-
-}
-`
-
-	res, err := processData([]byte(src), getDefaultOpts())
-
-	assert.NoError(t, err)
-	assert.Equal(t, dst, string(res))
-}
-
-func Test_processData_MergeImportSections(t *testing.T) {
-	src := `package main
+`,
+		},
+		{
+			name: "MergeImportSections",
+			src: `package main
 
 import (
 	"context"
 
 	"os"
 )
-
-func main() {
-
-}
-`
-	dst := `package main
+`,
+			want: `package main
 
 import (
 	"context"
 	"os"
 )
-
-func main() {
-
-}
-`
-
-	res, err := processData([]byte(src), getDefaultOpts())
-
-	assert.NoError(t, err)
-	assert.Equal(t, dst, string(res))
-}
-
-func Test_processData_SeparateStdlib(t *testing.T) {
-	src := `package main
+`,
+		},
+		{
+			name: "SeparateStdlib",
+			src: `package main
 
 import (
 	"context"
 	"github.com/pkg/errors"
 	"os"
-)
-
-func main() {
-
-}
-`
-	dst := `package main
+)`,
+			want: `package main
 
 import (
 	"context"
@@ -86,36 +56,23 @@ import (
 
 	"github.com/pkg/errors"
 )
-
-func main() {
-
-}
-`
-
-	res, err := processData([]byte(src), getDefaultOpts())
-
-	assert.NoError(t, err)
-	assert.Equal(t, dst, string(res))
-}
-
-func Test_processData_NonPreformattedImports_ShouldBeProcessedCorrectly(t *testing.T) {
-	src := `package main
+`,
+		},
+		{
+			name: "NonPreformattedImports",
+			src: `package main
 
 	import (
 	"context"
   "os"
 
 		"github.com/pkg/errors"
-		   
+
 	"github.com/bradfitz/gomemcache"
 	"fmt"
 	)
-
-func main() {
-
-}
-`
-	dst := `package main
+`,
+			want: `package main
 
 import (
 	"context"
@@ -125,14 +82,19 @@ import (
 	"github.com/bradfitz/gomemcache"
 	"github.com/pkg/errors"
 )
+`,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := processData([]byte(test.src), getDefaultOpts())
 
-func main() {
-
-}
-`
-
-	res, err := processData([]byte(src), getDefaultOpts())
-
-	assert.NoError(t, err)
-	assert.Equal(t, dst, string(res))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if string(got) != test.want {
+				t.Errorf("unexpected result: got: %q, want: %q", string(got), test.want)
+			}
+		})
+	}
 }
